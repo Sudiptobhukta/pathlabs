@@ -18,9 +18,11 @@ function Login() {
       localStorage.setItem("token", res.data.token);
       localStorage.setItem("user", JSON.stringify(res.data.user));
       setMessage("Login successful ✅");
-
-      // Redirect to dashboard
-      window.location.href = "/dash";
+      debugger
+      if(JSON.parse(localStorage.getItem("user"))?.role === 'admin'){
+        window.location.href = "/admin-dash";
+      }else{
+      window.location.href = "/dash";}
     } catch (err) {
       setMessage(err.response?.data?.message || "Something went wrong ❌");
     }

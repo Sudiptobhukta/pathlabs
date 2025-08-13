@@ -10,11 +10,11 @@ const testAppointmentSchema = new mongoose.Schema({
     type: String,
     required: true
   },
-  testDate: {
+  date: {
     type: Date,
     required: true
   },
-  testTime: {
+  time: {
     type: String,
     required: true
   },

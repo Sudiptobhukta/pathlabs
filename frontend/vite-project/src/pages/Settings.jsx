@@ -1,23 +1,22 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import { motion } from "framer-motion";
 
 const Settings = () => {
-  const [user, setUser] = useState(null); // Will store fetched user data
+  const [user, setUser] = useState(null);
   const [name, setName] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
 
-  // Mock: Replace this with actual auth context or fetch logic
-  console.log(localStorage.getItem)
-  const email = JSON.parse(localStorage.getItem("user")).email; // Assumes login stores user ID
-  const token = localStorage.getItem("token"); // Optional: For protected routes
- 
+  const email = JSON.parse(localStorage.getItem("user"))?.email;
+  const token = localStorage.getItem("token");
+
   useEffect(() => {
-    // Fetch current user data on mount
     const fetchUser = async () => {
       try {
-        const res = await axios.get(`http://localhost:5000/api/${email}`);
-        console.log(res)
+        const res = await axios.get(`http://localhost:5000/api/auth/${email}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
         setUser(res.data);
         setName(res.data.name);
       } catch (error) {
@@ -25,17 +24,16 @@ const Settings = () => {
       }
     };
     if (email) fetchUser();
-  }, [email]);
+  }, [email, token]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     try {
-      const res = await axios.put(`http://localhost:5000/api/auth/users/${email}`, {
-        name,
-        password,
-      });
-
+      await axios.put(
+        `http://localhost:5000/api/auth/${email}`,
+        { name, password },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
       setMessage("Profile updated successfully!");
       setPassword("");
     } catch (err) {
@@ -44,64 +42,88 @@ const Settings = () => {
     }
   };
 
-  if (!user) return <p className="p-6">Loading...</p>;
+  if (!email) return <p className="p-6 text-center">Loading...</p>;
 
   return (
     <div className="min-h-screen px-6 py-10">
-      <div className="text-center mb-10">
-        <h1 className="text-3xl font-bold text-gray-800">Settings</h1>
+      <motion.div
+        className="text-center mb-10"
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
+        <h1 className="text-3xl font-bold text-blue-700">Settings</h1>
         <p className="text-gray-600">Manage your preferences and account</p>
-      </div>
+      </motion.div>
 
-      <form
+      <motion.form
         onSubmit={handleSubmit}
-        className="bg-white shadow-xl rounded-xl p-6 max-w-3xl mx-auto space-y-6"
+        className="bg-gradient-to-br from-white to-blue-50 shadow-lg rounded-xl p-8 max-w-2xl mx-auto space-y-6"
+        initial={{ opacity: 0, y: 30 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
       >
         <div>
-          <label className="block text-sm font-medium text-gray-700">Username</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Username
+          </label>
           <input
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="w-full mt-1 p-3 border border-gray-300 rounded"
+            className="w-full p-3 border border-gray-300 rounded focus:ring-2 focus:ring-blue-400 focus:outline-none"
             required
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700">Email</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Email
+          </label>
           <input
             type="email"
-            value={user.email}
+            value={email}
             readOnly
-            className="w-full mt-1 p-3 border border-gray-300 bg-gray-100 text-gray-600 cursor-not-allowed"
+            className="w-full p-3 border border-gray-300 bg-gray-100 text-gray-600 rounded cursor-not-allowed"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700">New Password</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            New Password
+          </label>
           <input
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="Leave blank to keep current"
-            className="w-full mt-1 p-3 border border-gray-300 rounded"
+            className="w-full p-3 border border-gray-300 rounded focus:ring-2 focus:ring-blue-400 focus:outline-none"
           />
         </div>
 
-        <button
+        {message && (
+          <motion.p
+            className={`text-sm mt-3 text-center font-medium ${
+              message.includes("successfully")
+                ? "text-green-600"
+                : "text-red-600"
+            }`}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+          >
+            {message}
+          </motion.p>
+        )}
+
+        <motion.button
           type="submit"
-          className="bg-purple-600 text-white px-6 py-2 rounded hover:bg-purple-700"
+          className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors w-full font-semibold shadow-md"
+          whileHover={{ scale: 1.03 }}
+          whileTap={{ scale: 0.98 }}
         >
           Save Changes
-        </button>
-
-        {message && (
-          <p className="text-sm mt-3 text-center text-green-600 font-medium">
-            {message}
-          </p>
-        )}
-      </form>
+        </motion.button>
+      </motion.form>
     </div>
   );
 };

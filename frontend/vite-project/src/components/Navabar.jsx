@@ -29,13 +29,7 @@ function Navabar({username,companyName}) {
             >
               ⚙️
             </button>
-            <button
-              onClick={() => navigate("/notifications")}
-              className="text-gray-600 hover:text-blue-600 transition"
-              title="Notifications"
-            >
-              🔔
-            </button>
+            
             <button
               onClick={handleLogout}
               // onClick={() => setShowChatbot(!showChatbot)}

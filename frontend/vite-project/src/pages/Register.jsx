@@ -10,11 +10,12 @@ const Register = () => {
     name: "",
     email: "",
     password: "",
-    role: "user",
+    role: "",
   });
   const [message, setMessage] = useState("");
 
   const handleChange = (e) => {
+    debugger
     setFormData((prev) => ({
       ...prev,
       [e.target.name]: e.target.value,
@@ -32,7 +33,7 @@ const Register = () => {
 
       // Redirect to login page after 1.5s
       setTimeout(() => {
-        navigate("/dash");
+        navigate("/");
       }, 1500);
     } catch (err) {
       setMessage(err.response?.data?.message || "Something went wrong ❌");

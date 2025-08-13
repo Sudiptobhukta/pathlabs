@@ -1,42 +1,94 @@
-// src/pages/TestResults.jsx
-import React from "react";
+// components/TestHistory.jsx
+import React, { useEffect, useState } from "react";
+import axios from "axios";
+import { motion } from "framer-motion";
 
-const TestResults = () => {
+const TestHistory = () => {
+  const [history, setHistory] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const email = JSON.parse(localStorage.getItem("user"))?.email;
+
+  useEffect(() => {
+    const fetchHistory = async () => {
+      try {
+        const res = await axios.get(`http://localhost:5000/api/test/testhistory/${email}`);
+        setHistory(res.data);
+      } catch (err) {
+        console.error("Error fetching test history:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (email) {
+      fetchHistory();
+    }
+  }, [email]);
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-4 border-blue-500"></div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen px-6 py-10">
-      <div className="text-center mb-10">
-        <h1 className="text-3xl font-bold text-gray-800">Test Results</h1>
-        <p className="text-gray-600">View uploaded medical test results</p>
-      </div>
+    <div className="p-6 max-w-5xl mx-auto">
+      <motion.h2
+        className="text-3xl font-bold mb-6 text-center text-blue-600"
+        initial={{ opacity: 0, y: -30 }}
+        animate={{ opacity: 1, y: 0 }}
+      >
+        Your Test History
+      </motion.h2>
 
-      <div className="bg-white shadow-xl rounded-xl p-6 max-w-5xl mx-auto">
-        <table className="min-w-full border border-gray-200">
-          <thead className="bg-purple-100">
-            <tr>
-              <th className="py-3 px-4 border-b text-left">#</th>
-              <th className="py-3 px-4 border-b text-left">Patient</th>
-              <th className="py-3 px-4 border-b text-left">Test Type</th>
-              <th className="py-3 px-4 border-b text-left">Date</th>
-              <th className="py-3 px-4 border-b text-left">Report</th>
-            </tr>
-          </thead>
-          <tbody>
-            {[1, 2, 3].map((_, idx) => (
-              <tr key={idx} className="hover:bg-gray-50">
-                <td className="py-2 px-4 border-b">{idx + 1}</td>
-                <td className="py-2 px-4 border-b">John Doe</td>
-                <td className="py-2 px-4 border-b">Blood Test</td>
-                <td className="py-2 px-4 border-b">2025-07-04</td>
-                <td className="py-2 px-4 border-b">
-                  <a href="#" className="text-blue-600 underline">View</a>
-                </td>
+      {history.length === 0 ? (
+        <motion.p
+          className="text-center text-gray-500"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+        >
+          No test appointments found.
+        </motion.p>
+      ) : (
+        <motion.div
+          className="overflow-x-auto bg-white shadow-lg rounded-lg p-4"
+          initial={{ opacity: 0, y: 50 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
+          <table className="min-w-full border border-gray-200 rounded-lg overflow-hidden">
+            <thead className="bg-blue-600 text-white">
+              <tr>
+                <th className="px-4 py-2 text-left">Test Name</th>
+                <th className="px-4 py-2 text-left">Date</th>
+                <th className="px-4 py-2 text-left">Time</th>
+                <th className="px-4 py-2 text-left">Booked On</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody>
+              {history.map((test, index) => (
+                <motion.tr
+                  key={test._id}
+                  className={`border-b hover:bg-blue-50 transition ${
+                    index % 2 === 0 ? "bg-gray-50" : "bg-white"
+                  }`}
+                  initial={{ opacity: 0, x: -50 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                >
+                  <td className="px-4 py-2">{test.testName}</td>
+                  <td className="px-4 py-2">{new Date(test.date).toLocaleDateString()}</td>
+                  <td className="px-4 py-2">{test.time}</td>
+                  <td className="px-4 py-2">{new Date(test.createdAt).toLocaleString()}</td>
+                </motion.tr>
+              ))}
+            </tbody>
+          </table>
+        </motion.div>
+      )}
     </div>
   );
 };
 
-export default TestResults;
+export default TestHistory;

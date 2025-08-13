@@ -6,17 +6,19 @@ const Trouter = express.Router();
 // Book a test
 Trouter.post("/testbook", async (req, res) => {
   try {
-    const { userEmail, testName, testDate, testTime } = req.body;
+    const { email, testName, date, time } = req.body;
+    console.log(req.body)
 
-    const appointment = new TestAppointment({
-      userEmail,
+    const Tappointment = new TestAppointment({
+      userEmail: email, 
       testName,
-      testDate,
-      testTime
+      date,
+      time
     });
+    console.log(Tappointment)
 
-    await appointment.save();
-    res.status(201).json({ message: "Test booked successfully", appointment });
+    await Tappointment.save();
+    res.status(201).json({ message: "Test booked successfully", Tappointment });
   } catch (error) {
     res.status(500).json({ message: "Error booking test", error: error.message });
   }
@@ -30,6 +32,15 @@ Trouter.get("/testhistory/:email", async (req, res) => {
     res.json(history);
   } catch (error) {
     res.status(500).json({ message: "Error fetching test history", error: error.message });
+  }
+});
+
+Trouter.get("/all", async (req, res) => {
+  try {
+    const testBookings = await TestAppointment.find().sort({ createdAt: -1 });
+    return res.json(testBookings);
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching all test bookings", error: error.message });
   }
 });
 
