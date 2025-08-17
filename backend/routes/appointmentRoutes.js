@@ -16,4 +16,17 @@ routers.get("/all", async (req, res) => {
   }
 });
 
+routers.delete("/appointments/:email", async (req, res) => {
+  const { email } = req.params;
+  try {
+    await Appointment.deleteMany({ userEmail: email });
+    return res.json({ message: `Appointments for ${email} deleted successfully` });
+  } catch (error) {
+    res.status(500).json({ message: "Error deleting appointments", error: error.message });
+  }
+});
+
+
+
+
 export default routers;

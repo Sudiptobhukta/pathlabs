@@ -1,188 +1,244 @@
-// src/pages/TestAppointment.jsx
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { motion } from "framer-motion";
-import { FlaskConical, CalendarClock, Loader2 } from "lucide-react";
+import {
+  FlaskConical,
+  Calendar,
+  Clock,
+  StickyNote,
+  Shield,
+} from "lucide-react";
 
 const TestAppointment = () => {
-  const [form, setForm] = useState({ testName: "", date: "", time: "" });
+  const [testName, setTestName] = useState("");
+  const [date, setDate] = useState("");
+  const [time, setTime] = useState("");
   const [notes, setNotes] = useState("");
-  const [submitting, setSubmitting] = useState(false);
-  const [status, setStatus] = useState({ type: "", text: "" });
+  const [step, setStep] = useState(1);
+  const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  // Same accent palette + structure as TestHistory
   const availableTests = [
-    { name: "Complete Blood Count (CBC)" },
-    { name: "Lipid Profile" },
-    { name: "Blood Sugar Test" },
-    { name: "Thyroid Function Test" },
-    { name: "Liver Function Test" },
-    { name: "Kidney Function Test" },
-    { name: "Urine Analysis" },
-    { name: "Vitamin D Test" },
-    { name: "Covid-19 RT-PCR" },
+    "Complete Blood Count (CBC)",
+    "Lipid Profile",
+    "Blood Sugar Test",
+    "Thyroid Function Test",
+    "Liver Function Test",
+    "Kidney Function Test",
+    "Urine Analysis",
+    "Vitamin D Test",
+    "Covid-19 RT-PCR",
   ];
 
   const email = JSON.parse(localStorage.getItem("user"))?.email || "";
+  const token = localStorage.getItem("token");
 
-  const handleChange = (e) =>
-    setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+  useEffect(() => {
+    // Load Razorpay Script
+    const script = document.createElement("script");
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.async = true;
+    document.body.appendChild(script);
+  }, []);
 
-  const handleSubmit = async (e) => {
+  const handleBookingSubmit = (e) => {
     e.preventDefault();
-    setStatus({ type: "", text: "" });
-
-    if (!form.testName || !form.date || !form.time) {
-      setStatus({ type: "error", text: "Please complete all fields." });
+    if (!testName || !date || !time) {
+      setMessage("❌ Please complete all required fields.");
       return;
     }
-    if (!email) {
-      setStatus({ type: "error", text: "User email not found. Please log in again." });
-      return;
-    }
+    setMessage("");
+    setStep(2);
+  };
 
-    setSubmitting(true);
+  const handleRazorpayPayment = async () => {
+    setLoading(true);
     try {
-      await axios.post("http://localhost:5000/api/test/testbook", {
-        email,
-        testName: form.testName,
-        date: form.date,
-        time: form.time,
-        notes,
+      // 1️⃣ Create order from backend
+      const { data: order } = await axios.post("http://localhost:5000/create-order", {
+        amount: 500, // Fixed amount for now, can make dynamic
       });
 
-      setStatus({ type: "success", text: "Test appointment booked successfully!" });
-      setForm({ testName: "", date: "", time: "" });
-      setNotes("");
-    } catch (err) {
-      setStatus({
-        type: "error",
-        text: err.response?.data?.message || "Failed to book test.",
-      });
+      // 2️⃣ Configure Razorpay options
+      const options = {
+        key: "rzp_test_R5bVtEig0TuV18", // Test Key ID
+        amount: order.amount,
+        currency: order.currency,
+        name: "Lab Test Booking",
+        description: testName,
+        order_id: order.id,
+        handler: async function (response) {
+          try {
+            // 3️⃣ Call your existing API to store booking in DB
+            await axios.post(
+              "http://localhost:5000/api/test/testbook",
+              { email, testName, date, time, notes },
+              { headers: { Authorization: `Bearer ${token}` } }
+            );
+
+            setMessage("✅ Test appointment booked & payment successful!");
+            setTestName("");
+            setDate("");
+            setTime("");
+            setNotes("");
+            setStep(1);
+          } catch (err) {
+            console.error(err);
+            setMessage("❌ Failed to save booking after payment.");
+          }
+        },
+        theme: {
+          color: "#3399cc",
+        },
+      };
+
+      const rzp = new window.Razorpay(options);
+      rzp.open();
+    } catch (error) {
+      console.error("Payment initiation failed:", error);
+      setMessage("❌ Payment could not be started.");
     } finally {
-      setSubmitting(false);
+      setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen px-4 py-10">
-      {/* Optional global background if you want it here too */}
-      <div className="absolute inset-0 -z-10 h-full w-full bg-white [background:radial-gradient(125%_125%_at_50%_10%,#fff_40%,#63e_100%)]" />
+    <div className="min-h-screen bg-gradient-to-br from-teal-50 to-blue-50 py-12 px-6">
+      <div className="max-w-6xl mx-auto grid lg:grid-cols-2 gap-12 items-center">
+        {/* Left Section */}
+        <motion.div
+          initial={{ opacity: 0, x: -30 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.6 }}
+          className="bg-white shadow-lg rounded-2xl p-8 border border-gray-100"
+        >
+          {step === 1 ? (
+            <>
+              <h1 className="text-3xl font-bold text-teal-700 mb-2">
+                Book a Lab Test
+              </h1>
+              <p className="text-gray-500 mb-6">
+                Select your test and preferred schedule.
+              </p>
 
-      <motion.div
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="max-w-3xl mx-auto"
-      >
-        <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
-          {/* Gradient header (matches TestHistory) */}
-          <div className="px-6 py-8 bg-gradient-to-r from-indigo-600 to-purple-600 text-white">
-            <div className="flex items-center gap-3">
-              <FlaskConical className="w-6 h-6" />
-              <h1 className="text-2xl font-bold">Book a Lab Test</h1>
-            </div>
-            <p className="opacity-90 mt-1">
-              Choose a test, pick a slot. It’ll appear in your Test History instantly.
-            </p>
-          </div>
+              <form className="space-y-5" onSubmit={handleBookingSubmit}>
+                <div className="flex items-center border border-gray-200 rounded-lg p-3">
+                  <FlaskConical className="text-gray-400 mr-3" size={20} />
+                  <select
+                    value={testName}
+                    onChange={(e) => setTestName(e.target.value)}
+                    required
+                    className="w-full outline-none bg-transparent"
+                  >
+                    <option value="">— Choose a test —</option>
+                    {availableTests.map((test) => (
+                      <option key={test} value={test}>
+                        {test}
+                      </option>
+                    ))}
+                  </select>
+                </div>
 
-          {/* Form card */}
-          <div className="p-6 space-y-6">
-            {status.text && (
-              <div
-                className={`p-3 rounded-lg text-sm border ${
-                  status.type === "success"
-                    ? "bg-green-50 text-green-700 border-green-200"
-                    : "bg-rose-50 text-rose-700 border-rose-200"
-                }`}
-              >
-                {status.text}
-              </div>
-            )}
-
-            <form onSubmit={handleSubmit} className="space-y-5">
-              {/* Test select */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Select Test
-                </label>
-                <select
-                  name="testName"
-                  value={form.testName}
-                  onChange={handleChange}
-                  className="w-full border rounded-xl px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                >
-                  <option value="">— Choose a test —</option>
-                  {availableTests.map((t) => (
-                    <option key={t.name} value={t.name}>
-                      {t.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Date & Time */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Date
-                  </label>
+                <div className="flex items-center border border-gray-200 rounded-lg p-3">
+                  <Calendar className="text-gray-400 mr-3" size={20} />
                   <input
                     type="date"
-                    name="date"
-                    value={form.date}
-                    onChange={handleChange}
-                    className="w-full border rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    value={date}
+                    onChange={(e) => setDate(e.target.value)}
+                    required
+                    className="w-full outline-none"
                   />
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Time
-                  </label>
+
+                <div className="flex items-center border border-gray-200 rounded-lg p-3">
+                  <Clock className="text-gray-400 mr-3" size={20} />
                   <input
                     type="time"
-                    name="time"
-                    value={form.time}
-                    onChange={handleChange}
-                    className="w-full border rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    value={time}
+                    onChange={(e) => setTime(e.target.value)}
+                    required
+                    className="w-full outline-none"
                   />
                 </div>
-              </div>
 
-              {/* Notes */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Notes (optional)
-                </label>
-                <textarea
-                  rows="3"
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
-                  className="w-full border rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  placeholder="Any special instructions for the lab..."
-                />
-              </div>
-
-              {/* Footer */}
-              <div className="flex items-center justify-between">
-                <div className="hidden sm:flex items-center gap-2 text-gray-500 text-sm">
-                  <CalendarClock className="w-4 h-4" />
-                  <span>Your slot is held for 10 minutes.</span>
+                <div className="flex items-start border border-gray-200 rounded-lg p-3">
+                  <StickyNote className="text-gray-400 mr-3 mt-1" size={20} />
+                  <textarea
+                    placeholder="Additional Notes (optional)"
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                    className="w-full outline-none resize-none"
+                  />
                 </div>
-                <button
+
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.97 }}
                   type="submit"
-                  disabled={submitting}
-                  className="inline-flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-70 text-white font-medium px-5 py-2.5 rounded-xl transition"
+                  className="bg-teal-600 text-white px-6 py-3 rounded-lg hover:bg-teal-700 w-full font-semibold shadow-md transition"
                 >
-                  {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
-                  {submitting ? "Booking…" : "Book Appointment"}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      </motion.div>
+                  Proceed to Payment
+                </motion.button>
+              </form>
+            </>
+          ) : (
+            <>
+              <h1 className="text-3xl font-bold text-green-700 mb-2">
+                Secure Payment
+              </h1>
+              <p className="text-gray-500 mb-6 flex items-center gap-2">
+                <Shield size={18} className="text-green-500" />
+                All transactions are encrypted & secure.
+              </p>
+
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.97 }}
+                onClick={handleRazorpayPayment}
+                disabled={loading}
+                className="flex items-center justify-center gap-2 bg-[#3399cc] text-white px-6 py-3 rounded-lg hover:bg-[#2d89b3] w-full font-semibold shadow-md transition"
+              >
+                <img
+                  src="https://razorpay.com/assets/razorpay-glyph.svg"
+                  alt="Razorpay"
+                  className="w-5 h-5"
+                />
+                {loading ? "Processing..." : "Pay with Razorpay"}
+              </motion.button>
+            </>
+          )}
+
+          {message && (
+            <motion.p
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className={`text-center mt-4 text-sm font-medium ${
+                message.includes("✅") ? "text-green-600" : "text-red-500"
+              }`}
+            >
+              {message}
+            </motion.p>
+          )}
+        </motion.div>
+
+        {/* Right Section - Illustration */}
+        <motion.div
+          initial={{ opacity: 0, x: 30 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.6 }}
+          className="hidden lg:block"
+        >
+          <img
+            src={
+              step === 1
+                ? "https://img.freepik.com/free-vector/lab-research-concept-illustration_114360-7366.jpg"
+                : "https://img.freepik.com/free-vector/secure-payment-concept-illustration_114360-4975.jpg"
+            }
+            alt="Booking Illustration"
+            className="w-full rounded-2xl shadow-lg"
+          />
+        </motion.div>
+      </div>
     </div>
   );
 };

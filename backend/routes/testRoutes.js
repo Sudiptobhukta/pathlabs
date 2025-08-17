@@ -44,4 +44,15 @@ Trouter.get("/all", async (req, res) => {
   }
 });
 
+
+Trouter.delete("/tests/:email", async (req, res) => {
+  const { email } = req.params;
+  try {
+    await TestAppointment.deleteMany({ userEmail: email });
+    return res.json({ message: `Test appointments for ${email} deleted successfully` });
+  } catch (error) {
+    res.status(500).json({ message: "Error deleting test appointments", error: error.message });
+  }
+});
+
 export default Trouter;

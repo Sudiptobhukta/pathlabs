@@ -1,5 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
+import { Calendar, FlaskConical, Users } from "lucide-react"; // icons
+
+axios.defaults.baseURL = "http://localhost:5000/api";
 
 export default function AdminDashboard() {
   function formatDateToCustom(dateString) {
@@ -30,21 +34,42 @@ export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState("appointments");
 
   useEffect(() => {
-    fetch("http://localhost:5000/api/appointments/all")
-      .then(res => res.json())
-      .then(data => setAppointments(data))
+    axios.get("/appointments/all")
+      .then(res => setAppointments(res.data))
       .catch(err => console.error(err));
 
-    fetch("http://localhost:5000/api/test/all")
-      .then(res => res.json())
-      .then(data => setTestBookings(data))
+    axios.get("/test/all")
+      .then(res => setTestBookings(res.data))
       .catch(err => console.error(err));
 
-    fetch("http://localhost:5000/api/auth/users")
-      .then(res => res.json())
-      .then(data => setUsers(data))
+    axios.get("/auth/users")
+      .then(res => setUsers(res.data))
       .catch(err => console.error(err));
   }, []);
+
+  const handleDeleteAppointment = (email) => {
+    axios.delete(`/appointments/${email}`)
+      .then(() => {
+        setAppointments(prev => prev.filter(appt => appt.userEmail !== email));
+      })
+      .catch(err => console.error(err));
+  };
+
+  const handleDeleteTest = (email) => {
+    axios.delete(`/test/${email}`)
+      .then(() => {
+        setTestBookings(prev => prev.filter(test => test.userEmail !== email));
+      })
+      .catch(err => console.error(err));
+  };
+
+  const handleDeleteUser = (email) => {
+    axios.delete(`/auth/users/${email}`)
+      .then(() => {
+        setUsers(prev => prev.filter(user => user.email !== email));
+      })
+      .catch(err => console.error(err));
+  };
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -66,6 +91,39 @@ export default function AdminDashboard() {
         >
           Logout
         </button>
+      </div>
+
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className="bg-white shadow-lg rounded-xl p-5 flex items-center space-x-4 hover:shadow-xl transition">
+          <div className="bg-blue-100 p-3 rounded-full">
+            <Calendar className="text-blue-600" size={28} />
+          </div>
+          <div>
+            <h3 className="text-lg font-semibold text-gray-700">Appointments</h3>
+            <p className="text-2xl font-bold text-blue-600">{appointments.length}</p>
+          </div>
+        </div>
+
+        <div className="bg-white shadow-lg rounded-xl p-5 flex items-center space-x-4 hover:shadow-xl transition">
+          <div className="bg-green-100 p-3 rounded-full">
+            <FlaskConical className="text-green-600" size={28} />
+          </div>
+          <div>
+            <h3 className="text-lg font-semibold text-gray-700">Tests</h3>
+            <p className="text-2xl font-bold text-green-600">{testBookings.length}</p>
+          </div>
+        </div>
+
+        <div className="bg-white shadow-lg rounded-xl p-5 flex items-center space-x-4 hover:shadow-xl transition">
+          <div className="bg-purple-100 p-3 rounded-full">
+            <Users className="text-purple-600" size={28} />
+          </div>
+          <div>
+            <h3 className="text-lg font-semibold text-gray-700">Users</h3>
+            <p className="text-2xl font-bold text-purple-600">{users.length}</p>
+          </div>
+        </div>
       </div>
 
       {/* Tabs */}
@@ -103,6 +161,7 @@ export default function AdminDashboard() {
                     <th className="p-3">Doctor</th>
                     <th className="p-3">Date</th>
                     <th className="p-3">Time</th>
+                    <th className="p-3">Action</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -112,6 +171,14 @@ export default function AdminDashboard() {
                       <td className="p-3 border">{appt.doctorName}</td>
                       <td className="p-3 border">{formatDateToCustom(appt.appointmentDate)}</td>
                       <td className="p-3 border">{appt.preferredTime}</td>
+                      <td className="p-3 border">
+                        <button
+                          onClick={() => handleDeleteAppointment(appt.userEmail)}
+                          className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
+                        >
+                          Delete
+                        </button>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -132,6 +199,7 @@ export default function AdminDashboard() {
                     <th className="p-3">Test Name</th>
                     <th className="p-3">Date</th>
                     <th className="p-3">Time</th>
+                    <th className="p-3">Action</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -141,6 +209,14 @@ export default function AdminDashboard() {
                       <td className="p-3 border">{test.testName}</td>
                       <td className="p-3 border">{formatDateToCustom(test.date)}</td>
                       <td className="p-3 border">{test.time}</td>
+                      <td className="p-3 border">
+                        <button
+                          onClick={() => handleDeleteTest(test.userEmail)}
+                          className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
+                        >
+                          Delete
+                        </button>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -160,6 +236,7 @@ export default function AdminDashboard() {
                     <th className="p-3">Name</th>
                     <th className="p-3">Email</th>
                     <th className="p-3">Role</th>
+                    <th className="p-3">Action</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -168,6 +245,14 @@ export default function AdminDashboard() {
                       <td className="p-3 border">{user.name}</td>
                       <td className="p-3 border">{user.email}</td>
                       <td className="p-3 border">{user.role}</td>
+                      <td className="p-3 border">
+                        <button
+                          onClick={() => handleDeleteUser(user.email)}
+                          className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
+                        >
+                          Delete
+                        </button>
+                      </td>
                     </tr>
                   ))}
                 </tbody>

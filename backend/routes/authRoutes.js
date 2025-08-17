@@ -17,6 +17,21 @@ router.get("/users", async (req, res) => {
     res.status(500).json({ message: "Error fetching users", error: error.message });
   }
 });
+router.delete("/users/:email", async (req, res) => {
+  const { email } = req.params;
+  try {
+    // Delete the user
+    await User.deleteOne({ email });
+
+    // Delete all appointments & test bookings related to the user
+    await Appointment.deleteMany({ userEmail: email });
+    await TestAppointment.deleteMany({ userEmail: email });
+
+    return res.json({ message: `User and related data for ${email} deleted successfully` });
+  } catch (error) {
+    res.status(500).json({ message: "Error deleting user", error: error.message });
+  }
+});
 
 
 
