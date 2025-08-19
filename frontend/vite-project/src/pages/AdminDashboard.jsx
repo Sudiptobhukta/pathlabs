@@ -47,18 +47,27 @@ export default function AdminDashboard() {
       .catch(err => console.error(err));
   }, []);
 
-  const handleDeleteAppointment = (email) => {
-    axios.delete(`/appointments/${email}`)
+  // ✅ Updated to use orderid + email
+  const handleDeleteAppointment = (orderid, email) => {
+    axios.delete(`appointments/del/${email}`, {
+      data: { orderid, email }
+    })
       .then(() => {
-        setAppointments(prev => prev.filter(appt => appt.userEmail !== email));
+        setAppointments(prev =>
+          prev.filter(appt => !(appt.orderid === orderid && appt.userEmail === email))
+        );
       })
       .catch(err => console.error(err));
   };
 
-  const handleDeleteTest = (email) => {
-    axios.delete(`/test/${email}`)
+  const handleDeleteTest = (orderid, email) => {
+    axios.delete(`test/del/${email}`, {
+      data: { orderid, email }
+    })
       .then(() => {
-        setTestBookings(prev => prev.filter(test => test.userEmail !== email));
+        setTestBookings(prev =>
+          prev.filter(test => !(test.orderid === orderid && test.userEmail === email))
+        );
       })
       .catch(err => console.error(err));
   };
@@ -93,7 +102,7 @@ export default function AdminDashboard() {
         </button>
       </div>
 
-      {/* Summary Cards */}
+      {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <div className="bg-white shadow-lg rounded-xl p-5 flex items-center space-x-4 hover:shadow-xl transition">
           <div className="bg-blue-100 p-3 rounded-full">
@@ -161,6 +170,7 @@ export default function AdminDashboard() {
                     <th className="p-3">Doctor</th>
                     <th className="p-3">Date</th>
                     <th className="p-3">Time</th>
+                    <th className="p-3">Order Id</th>
                     <th className="p-3">Action</th>
                   </tr>
                 </thead>
@@ -171,9 +181,10 @@ export default function AdminDashboard() {
                       <td className="p-3 border">{appt.doctorName}</td>
                       <td className="p-3 border">{formatDateToCustom(appt.appointmentDate)}</td>
                       <td className="p-3 border">{appt.preferredTime}</td>
+                      <td className="p-3 border">{appt.orderid}</td>
                       <td className="p-3 border">
                         <button
-                          onClick={() => handleDeleteAppointment(appt.userEmail)}
+                          onClick={() => handleDeleteAppointment(appt.orderid, appt.userEmail)}
                           className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
                         >
                           Delete
@@ -199,6 +210,7 @@ export default function AdminDashboard() {
                     <th className="p-3">Test Name</th>
                     <th className="p-3">Date</th>
                     <th className="p-3">Time</th>
+                    <th className="p-3">Order Id</th>
                     <th className="p-3">Action</th>
                   </tr>
                 </thead>
@@ -209,9 +221,10 @@ export default function AdminDashboard() {
                       <td className="p-3 border">{test.testName}</td>
                       <td className="p-3 border">{formatDateToCustom(test.date)}</td>
                       <td className="p-3 border">{test.time}</td>
+                      <td className="p-3 border">{test.orderid}</td>
                       <td className="p-3 border">
                         <button
-                          onClick={() => handleDeleteTest(test.userEmail)}
+                          onClick={() => handleDeleteTest(test.orderid, test.userEmail)}
                           className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
                         >
                           Delete

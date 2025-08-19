@@ -22,6 +22,10 @@ const testAppointmentSchema = new mongoose.Schema({
     type: String,
     enum: ["Pending", "Completed", "Cancelled"],
     default: "Pending"
+  },
+  orderid: {
+    type: String,
+    required: true
   }
 }, { timestamps: true });
 

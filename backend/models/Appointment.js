@@ -26,6 +26,10 @@ const appointmentSchema = new mongoose.Schema({
     enum: ["Pending", "Confirmed", "Completed", "Cancelled"],
     default: "Pending",
   },
+  orderid:{
+    type: String,
+    required: true,
+  },
   notes: {
     type: String,
   },

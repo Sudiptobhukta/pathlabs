@@ -2,6 +2,7 @@ import express from "express";
 import { registerUser, loginUser, updateUser } from "../controllers/authController.js";
 import { verifyToken } from "../middleware/verifyToken.js";
 import Appointment from "../models/Appointment.js";
+import TestAppointment from "../models/TestAppointment.js";
 import User from "../models/User.js";
 
 const router = express.Router();

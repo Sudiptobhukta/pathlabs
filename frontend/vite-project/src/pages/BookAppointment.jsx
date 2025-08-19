@@ -14,7 +14,6 @@ const BookAppointment = () => {
   const [message, setMessage] = useState("");
 
   useEffect(() => {
-    // Load Razorpay script
     const script = document.createElement("script");
     script.src = "https://checkout.razorpay.com/v1/checkout.js";
     script.async = true;
@@ -28,14 +27,12 @@ const BookAppointment = () => {
 
   const handlePayment = async () => {
     try {
-      // 1️⃣ Create order from backend
       const { data: order } = await axios.post("http://localhost:5000/create-order", {
-        amount: 200, // INR 500
+        amount: 200,
       });
 
-      // 2️⃣ Razorpay options
       const options = {
-        key: "rzp_test_R5bVtEig0TuV18", // replace with your Razorpay key
+        key: "rzp_test_R5bVtEig0TuV18",
         amount: order.amount,
         currency: order.currency,
         name: "HealthCare Center",
@@ -43,13 +40,12 @@ const BookAppointment = () => {
         order_id: order.id,
         handler: async (response) => {
           try {
-            // 3️⃣ Store appointment after payment success
             const token = localStorage.getItem("token");
             const email = JSON.parse(localStorage.getItem("user")).email;
 
             await axios.post(
               "http://localhost:5000/api/appointments/book",
-              { email, doctorName, reason, appointmentDate, preferredTime, notes },
+              { email, doctorName, reason, appointmentDate, preferredTime, orderid: order.id, notes },
               { headers: { Authorization: `Bearer ${token}` } }
             );
 
@@ -99,16 +95,22 @@ const BookAppointment = () => {
               <p className="text-gray-500 mb-6">Fill in your details to proceed to payment.</p>
 
               <form className="space-y-5" onSubmit={handleBookingSubmit}>
+                {/* Doctor Dropdown */}
                 <div className="flex items-center border border-gray-200 rounded-lg p-3">
                   <User className="text-gray-400 mr-3" size={20} />
-                  <input
-                    type="text"
-                    placeholder="Doctor's Name"
+                  <select
                     value={doctorName}
                     onChange={(e) => setDoctorName(e.target.value)}
                     required
-                    className="w-full outline-none"
-                  />
+                    className="w-full outline-none bg-transparent"
+                  >
+                    <option value="">Select Doctor</option>
+                    <option value="Dr. Sharma (Cardiologist)">Dr. Sharma (Cardiologist)</option>
+                    <option value="Dr. Mehta (Dermatologist)">Dr. Mehta (Dermatologist)</option>
+                    <option value="Dr. Roy (Neurologist)">Dr. Roy (Neurologist)</option>
+                    <option value="Dr. Kapoor (Orthopedic)">Dr. Kapoor (Orthopedic)</option>
+                    <option value="Dr. Iyer (General Physician)">Dr. Iyer (General Physician)</option>
+                  </select>
                 </div>
 
                 <div className="flex items-center border border-gray-200 rounded-lg p-3">

@@ -8,11 +8,12 @@ export const bookAppointment = async (req, res) => {
   try {
     console.log(req.body)
     const {
-      email, // User's email is required since it's the primary key
+      email, 
       doctorName,
       reason,
       appointmentDate,
       preferredTime,
+      orderid,
       notes,
     } = req.body;
     console.log(email)
@@ -33,6 +34,7 @@ export const bookAppointment = async (req, res) => {
       reason,
       appointmentDate,
       preferredTime,
+      orderid,
       notes,
     });
 

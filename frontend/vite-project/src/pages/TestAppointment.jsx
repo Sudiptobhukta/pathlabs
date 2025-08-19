@@ -72,7 +72,7 @@ const TestAppointment = () => {
             // 3️⃣ Call your existing API to store booking in DB
             await axios.post(
               "http://localhost:5000/api/test/testbook",
-              { email, testName, date, time, notes },
+              { email, testName, date, time,orderid:order.id ,notes },
               { headers: { Authorization: `Bearer ${token}` } }
             );
 

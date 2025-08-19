@@ -180,6 +180,9 @@ const BookingHistory = () => {
                     ).toLocaleDateString()}{" "}
                     at {appointment.preferredTime}
                   </p>
+                   <p className="text-sm text-gray-600">
+                    <strong>Order Id:</strong> {appointment.orderid}
+                  </p>
                   {appointment.notes && (
                     <p className="text-sm text-gray-500 italic">
                       Notes: {appointment.notes}

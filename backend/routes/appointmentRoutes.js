@@ -15,16 +15,34 @@ routers.get("/all", async (req, res) => {
     res.status(500).json({ message: "Error fetching all appointments", error: error.message });
   }
 });
+routers.delete("/del/:email", async (req, res) => {
+  const { email, orderId } = req.params;
 
-routers.delete("/appointments/:email", async (req, res) => {
-  const { email } = req.params;
   try {
-    await Appointment.deleteMany({ userEmail: email });
-    return res.json({ message: `Appointments for ${email} deleted successfully` });
+    const deleted = await Appointment.findOneAndDelete({ 
+      userEmail: email, 
+      orderId: orderId 
+    });
+
+    if (!deleted) {
+      return res.status(404).json({ 
+        message: `No appointment found for ${email} with orderId ${orderId}` 
+      });
+    }
+
+    return res.json({ 
+      message: `Appointment for ${email} with orderId ${orderId} deleted successfully` 
+    });
   } catch (error) {
-    res.status(500).json({ message: "Error deleting appointments", error: error.message });
+    res.status(500).json({ 
+      message: "Error deleting appointment", 
+      error: error.message 
+    });
   }
 });
+
+
+
 
 
 

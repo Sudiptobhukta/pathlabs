@@ -113,7 +113,6 @@ const TestHistory = () => {
                 <th className="px-4 py-2 text-left">Test Name</th>
                 <th className="px-4 py-2 text-left">Date</th>
                 <th className="px-4 py-2 text-left">Time</th>
-                <th className="px-4 py-2 text-left">Booked On</th>
               </tr>
             </thead>
             <tbody>
@@ -138,6 +137,10 @@ const TestHistory = () => {
                   <td className="px-4 py-2 flex items-center gap-2">
                     <Clock className="w-4 h-4 text-blue-500" />
                     {test.time}
+                  </td>
+                  <td className="px-4 py-2 flex items-center gap-2">
+                    <Clock className="w-4 h-4 text-blue-500" />
+                    {test.orderid}
                   </td>
                   <td className="px-4 py-2">
                     {new Date(test.createdAt).toLocaleString()}

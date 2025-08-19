@@ -48,15 +48,34 @@ app.post("/create-order", async (req, res) => {
     }
 });
 
-app.delete("/appointments/:email", async (req, res) => {
-  const { email } = req.params;
-  try {
-    await Appointment.deleteMany({ userEmail: email });
-    return res.json({ message: `Appointments for ${email} deleted successfully` });
-  } catch (error) {
-    res.status(500).json({ message: "Error deleting appointments", error: error.message });
-  }
-});
+// app.delete("/appointments/:email", async (req, res) => {
+//   const { email } = req.params;
+//   try {
+//     await Appointment.deleteMany({ userEmail: email });
+//     return res.json({ message: `Appointments for ${email} deleted successfully` });
+//   } catch (error) {
+//     res.status(500).json({ message: "Error deleting appointments", error: error.message });
+//   }
+// });
+
+// app.delete("api/tests/:email", async (req, res) => {
+//   const { email, orderId } = req.params;
+
+//   try {
+//     const deletedTest = await TestAppointment.findOneAndDelete({
+//       userEmail: email,
+//       orderId: orderId,
+//     });
+
+//     if (!deletedTest) {
+//       return res.status(404).json({ message: "Test appointment not found" });
+//     }
+
+//     return res.json({ message: `Test appointment with orderId ${orderId} for ${email} deleted successfully` });
+//   } catch (error) {
+//     res.status(500).json({ message: "Error deleting test appointment", error: error.message });
+//   }
+// });
 
 app.listen(process.env.PORT, () => {
   console.log(`🚀 Server running on port ${process.env.PORT}`);

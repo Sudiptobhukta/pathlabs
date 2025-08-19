@@ -6,14 +6,15 @@ const Trouter = express.Router();
 // Book a test
 Trouter.post("/testbook", async (req, res) => {
   try {
-    const { email, testName, date, time } = req.body;
+    const { email, testName, date, time,orderid } = req.body;
     console.log(req.body)
 
     const Tappointment = new TestAppointment({
       userEmail: email, 
       testName,
       date,
-      time
+      time,
+      orderid
     });
     console.log(Tappointment)
 
@@ -45,13 +46,22 @@ Trouter.get("/all", async (req, res) => {
 });
 
 
-Trouter.delete("/tests/:email", async (req, res) => {
-  const { email } = req.params;
+Trouter.delete("/del/:email", async (req, res) => {
+  const { email, orderId } = req.params;
+
   try {
-    await TestAppointment.deleteMany({ userEmail: email });
-    return res.json({ message: `Test appointments for ${email} deleted successfully` });
+    const deletedTest = await TestAppointment.findOneAndDelete({
+      userEmail: email,
+      orderId: orderId,
+    });
+
+    if (!deletedTest) {
+      return res.status(404).json({ message: "Test appointment not found" });
+    }
+
+    return res.json({ message: `Test appointment with orderId ${orderId} for ${email} deleted successfully` });
   } catch (error) {
-    res.status(500).json({ message: "Error deleting test appointments", error: error.message });
+    res.status(500).json({ message: "Error deleting test appointment", error: error.message });
   }
 });
 
