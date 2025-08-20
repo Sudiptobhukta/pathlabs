@@ -12,12 +12,21 @@ const BookAppointment = () => {
   const [notes, setNotes] = useState("");
   const [step, setStep] = useState(1);
   const [message, setMessage] = useState("");
+  const [doctors, setDoctors] = useState([]); // 🔹 state for doctors list
 
   useEffect(() => {
     const script = document.createElement("script");
     script.src = "https://checkout.razorpay.com/v1/checkout.js";
     script.async = true;
     document.body.appendChild(script);
+  }, []);
+
+  // 🔹 Fetch doctors from backend
+  useEffect(() => {
+    axios
+      .get("http://localhost:5000/api/doctors")
+      .then((res) => setDoctors(res.data))
+      .catch((err) => console.error("Error fetching doctors:", err));
   }, []);
 
   const handleBookingSubmit = (e) => {
@@ -105,11 +114,15 @@ const BookAppointment = () => {
                     className="w-full outline-none bg-transparent"
                   >
                     <option value="">Select Doctor</option>
-                    <option value="Dr. Sharma (Cardiologist)">Dr. Sharma (Cardiologist)</option>
-                    <option value="Dr. Mehta (Dermatologist)">Dr. Mehta (Dermatologist)</option>
-                    <option value="Dr. Roy (Neurologist)">Dr. Roy (Neurologist)</option>
-                    <option value="Dr. Kapoor (Orthopedic)">Dr. Kapoor (Orthopedic)</option>
-                    <option value="Dr. Iyer (General Physician)">Dr. Iyer (General Physician)</option>
+                    {doctors.length > 0 ? (
+                      doctors.map((doc) => (
+                        <option key={doc._id} value={doc.name}>
+                          {doc.name} ({doc.specialization})
+                        </option>
+                      ))
+                    ) : (
+                      <option disabled>Loading doctors...</option>
+                    )}
                   </select>
                 </div>
 

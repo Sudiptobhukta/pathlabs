@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 
 const TestAppointment = () => {
+  const [tests, setTests] = useState([]); // fetched tests from backend
   const [testName, setTestName] = useState("");
   const [date, setDate] = useState("");
   const [time, setTime] = useState("");
@@ -18,23 +19,24 @@ const TestAppointment = () => {
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const availableTests = [
-    "Complete Blood Count (CBC)",
-    "Lipid Profile",
-    "Blood Sugar Test",
-    "Thyroid Function Test",
-    "Liver Function Test",
-    "Kidney Function Test",
-    "Urine Analysis",
-    "Vitamin D Test",
-    "Covid-19 RT-PCR",
-  ];
-
   const email = JSON.parse(localStorage.getItem("user"))?.email || "";
   const token = localStorage.getItem("token");
 
+  // 🔹 Fetch tests dynamically from backend
   useEffect(() => {
-    // Load Razorpay Script
+    const fetchTests = async () => {
+      try {
+        const { data } = await axios.get("http://localhost:5000/api/alltests");
+        setTests(data);
+      } catch (error) {
+        console.error("Error fetching tests:", error);
+      }
+    };
+    fetchTests();
+  }, []);
+
+  // 🔹 Load Razorpay script once
+  useEffect(() => {
     const script = document.createElement("script");
     script.src = "https://checkout.razorpay.com/v1/checkout.js";
     script.async = true;
@@ -56,12 +58,12 @@ const TestAppointment = () => {
     try {
       // 1️⃣ Create order from backend
       const { data: order } = await axios.post("http://localhost:5000/create-order", {
-        amount: 500, // Fixed amount for now, can make dynamic
+        amount: 500, // Fixed for now; can be dynamic (e.g., test.price)
       });
 
-      // 2️⃣ Configure Razorpay options
+      // 2️⃣ Razorpay options
       const options = {
-        key: "rzp_test_R5bVtEig0TuV18", // Test Key ID
+        key: "rzp_test_R5bVtEig0TuV18", // Test key
         amount: order.amount,
         currency: order.currency,
         name: "Lab Test Booking",
@@ -69,10 +71,10 @@ const TestAppointment = () => {
         order_id: order.id,
         handler: async function (response) {
           try {
-            // 3️⃣ Call your existing API to store booking in DB
+            // 3️⃣ Save booking in DB
             await axios.post(
               "http://localhost:5000/api/test/testbook",
-              { email, testName, date, time,orderid:order.id ,notes },
+              { email, testName, date, time, orderid: order.id, notes },
               { headers: { Authorization: `Bearer ${token}` } }
             );
 
@@ -122,6 +124,7 @@ const TestAppointment = () => {
               </p>
 
               <form className="space-y-5" onSubmit={handleBookingSubmit}>
+                {/* Test Dropdown (fetched) */}
                 <div className="flex items-center border border-gray-200 rounded-lg p-3">
                   <FlaskConical className="text-gray-400 mr-3" size={20} />
                   <select
@@ -131,14 +134,15 @@ const TestAppointment = () => {
                     className="w-full outline-none bg-transparent"
                   >
                     <option value="">— Choose a test —</option>
-                    {availableTests.map((test) => (
-                      <option key={test} value={test}>
-                        {test}
+                    {tests.map((test) => (
+                      <option key={test._id} value={test.name}>
+                        {test.name} {test.description ? `- ${test.description}` : ""}
                       </option>
                     ))}
                   </select>
                 </div>
 
+                {/* Date */}
                 <div className="flex items-center border border-gray-200 rounded-lg p-3">
                   <Calendar className="text-gray-400 mr-3" size={20} />
                   <input
@@ -150,6 +154,7 @@ const TestAppointment = () => {
                   />
                 </div>
 
+                {/* Time */}
                 <div className="flex items-center border border-gray-200 rounded-lg p-3">
                   <Clock className="text-gray-400 mr-3" size={20} />
                   <input
@@ -161,6 +166,7 @@ const TestAppointment = () => {
                   />
                 </div>
 
+                {/* Notes */}
                 <div className="flex items-start border border-gray-200 rounded-lg p-3">
                   <StickyNote className="text-gray-400 mr-3 mt-1" size={20} />
                   <textarea
@@ -171,6 +177,7 @@ const TestAppointment = () => {
                   />
                 </div>
 
+                {/* Proceed Button */}
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.97 }}
